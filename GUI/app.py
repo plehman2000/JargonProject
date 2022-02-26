@@ -1,9 +1,8 @@
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
-import PyPDF2
 from tika import parser
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 
 app.config["UPLOAD_FOLDER"] = "static/"
 
@@ -21,16 +20,9 @@ def display_file():
         f.save(app.config['UPLOAD_FOLDER'] + filename)
 
         file = open(app.config['UPLOAD_FOLDER'] + filename,"rb")
-        pdfreader = PyPDF2.PdfFileReader(file)
-        x=pdfreader.numPages
-        pageobj=pdfreader.getPage(x-1)
-        text=pageobj.extractText()
-        
 
         raw = parser.from_file('static/'+filename)
         content=raw['content'][45:]
-
-        #content = file.read()   
         
     return render_template('content.html', content=content) 
 
