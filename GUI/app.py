@@ -1,43 +1,36 @@
-from time import process_time
-from flask import Flask, render_template, request
+from flask import Flask, request, render_template, json, jsonify
+from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 import os
 import pdfplumber
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__)
 
-app.config["UPLOAD_FOLDER"] = "static/"
 app.config["FLASK_APP"] = "app.py"
+
+Cors = CORS(app)
+CORS(app, resources={r'/*': {'origins': '*'}},CORS_SUPPORTS_CREDENTIALS = True)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 
 #initial page to upload pdf
 @app.route("/")
-def upload_file():
-    return render_template('index.html')
+def home():
+    return "all good"
 
 #displays the uploaded pdf
-@app.route("/display", methods = ['GET', 'POST'])
+@app.route('/gettext', methods = ['POST', 'GET'])
 def display_file():
-    if request.method == 'POST':
-        f = request.files['file']
-        filename = secure_filename(f.filename)
-        f.save(app.config['UPLOAD_FOLDER'] + filename)
-
-        pdf = pdfplumber.open('static/'+filename)
+    if(request.method == 'POST'):
+        pdf = pdfplumber.open(request.files['file'])
         page=0
         content=""
         while page < len(pdf.pages):
-            content+="\n" + pdf.pages[page].extract_text()
-            page+=1
+                content+="\n" + pdf.pages[page].extract_text()
+                page+=1
         pdf.close()
-    return render_template('content.html', content=content) 
-
-#clears out current static folder
-@app.route("/delete")
-def delete_files():
-    dir = "static/"
-    for f in os.listdir(dir):
-        os.remove(os.path.join(dir, f))
-    return render_template('index.html')
+        print(content)
+        return content 
     
 if(__name__) == "__main__":
     app.run()
